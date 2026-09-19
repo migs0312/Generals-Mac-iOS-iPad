@@ -1,0 +1,34 @@
+Backport of upstream DXVK 1676dcaf342a9b13af86c0464ad46235687727a6
+("[dxvk] Fix build failure with Clang 22", closes doitsujin/dxvk#5545).
+
+    Pass the default-constructed key explicitly instead of using an empty
+    std::tuple() with std::piecewise_construct, which Clang/LLVM 22 rejects
+    due to stricter parameter pack validation.
+
+The same libc++ change ships in Apple clang 21 / Xcode 27, so DXVK fails to
+build on current macOS without this. libc++'s new __try_key_extraction fast
+path for unordered_map::emplace forms `tuple_element<0, _Tuple1>::type` while
+substituting its own enable_if; for _Tuple1 = std::tuple<> that instantiates
+tuple_element<0, tuple<>>, which hard-errors inside the instantiation rather
+than in the immediate context, so the `tuple_size<_Tuple1>::value == 1` guard
+beside it never discards the overload.
+
+fbraz3/dxvk has not picked the upstream commit up (its master still carries
+std::tuple()), and this repo pins an older fork commit still. The changed
+line here is byte-identical to upstream's, so once the fork rebases, the
+reverse-check in cmake/apply-dxvk-patch.cmake passes and this patch
+self-disables instead of conflicting.
+
+diff --git a/src/dxvk/dxvk_pipemanager.cpp b/src/dxvk/dxvk_pipemanager.cpp
+index 84a07c1f..47df13b2 100644
+--- a/src/dxvk/dxvk_pipemanager.cpp
++++ b/src/dxvk/dxvk_pipemanager.cpp
+@@ -443,7 +443,7 @@ namespace dxvk {
+ 
+     auto iter = m_shaderLibraries.emplace(
+       std::piecewise_construct,
+-      std::tuple(),
++      std::tuple(key),
+       std::tuple(m_device, this, key, layout));
+     return &iter.first->second;
+   }

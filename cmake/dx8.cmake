@@ -191,7 +191,13 @@ Cflags: -I\${includedir}
       BINARY_DIR        ${DXVK_BUILD_DIR}
       DOWNLOAD_COMMAND  ""
       UPDATE_COMMAND    ""
-      PATCH_COMMAND     ""
+      # GeneralsX @bugfix Backport of upstream DXVK 1676dcaf3 (doitsujin/dxvk#5545):
+      # Xcode 27 / libc++ 21 rejects unordered_map::emplace with an empty key
+      # tuple. Applied idempotently, and the changed line matches upstream's, so
+      # this becomes a no-op once fbraz3/dxvk rebases past that commit.
+      PATCH_COMMAND     ${CMAKE_COMMAND} -DDXVK_SRC=${DXVK_SOURCE_DIR}
+                          -DDXVK_PATCH=${CMAKE_SOURCE_DIR}/Patches/dxvk-macos-xcode27-tuple.patch
+                          -P ${CMAKE_SOURCE_DIR}/cmake/apply-dxvk-patch.cmake
       CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env CC=clang CXX=clang++ "CFLAGS=-arch ${DXVK_HOST_ARCH} -mcpu=apple-m1" "CXXFLAGS=-arch ${DXVK_HOST_ARCH} -mcpu=apple-m1" "LDFLAGS=-arch ${DXVK_HOST_ARCH}" "${DXVK_PKG_CONFIG_ENV}" ${VULKAN_SDK_ENV_VAR} ${MESON_EXECUTABLE} setup ${DXVK_BUILD_DIR} ${DXVK_SOURCE_DIR} ${DXVK_MESON_MACHINE_ARGS} -Ddxvk_native_wsi=sdl3 --buildtype=release --reconfigure
       BUILD_COMMAND     ${NINJA_EXECUTABLE} -C ${DXVK_BUILD_DIR} src/d3d9/libdxvk_d3d9.0.dylib src/d3d8/libdxvk_d3d8.0.dylib
       INSTALL_COMMAND   ""
@@ -208,7 +214,13 @@ Cflags: -I\${includedir}
       GIT_SHALLOW       FALSE
       SOURCE_DIR        ${DXVK_SOURCE_DIR}
       BINARY_DIR        ${DXVK_BUILD_DIR}
-      PATCH_COMMAND     ""
+      # GeneralsX @bugfix Backport of upstream DXVK 1676dcaf3 (doitsujin/dxvk#5545):
+      # Xcode 27 / libc++ 21 rejects unordered_map::emplace with an empty key
+      # tuple. Applied idempotently, and the changed line matches upstream's, so
+      # this becomes a no-op once fbraz3/dxvk rebases past that commit.
+      PATCH_COMMAND     ${CMAKE_COMMAND} -DDXVK_SRC=${DXVK_SOURCE_DIR}
+                          -DDXVK_PATCH=${CMAKE_SOURCE_DIR}/Patches/dxvk-macos-xcode27-tuple.patch
+                          -P ${CMAKE_SOURCE_DIR}/cmake/apply-dxvk-patch.cmake
       CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env CC=clang CXX=clang++ "CFLAGS=-arch ${DXVK_HOST_ARCH} -mcpu=apple-m1" "CXXFLAGS=-arch ${DXVK_HOST_ARCH} -mcpu=apple-m1" "LDFLAGS=-arch ${DXVK_HOST_ARCH}" "${DXVK_PKG_CONFIG_ENV}" ${VULKAN_SDK_ENV_VAR} ${MESON_EXECUTABLE} setup ${DXVK_BUILD_DIR} ${DXVK_SOURCE_DIR} ${DXVK_MESON_MACHINE_ARGS} -Ddxvk_native_wsi=sdl3 --buildtype=release --reconfigure
       BUILD_COMMAND     ${NINJA_EXECUTABLE} -C ${DXVK_BUILD_DIR} src/d3d9/libdxvk_d3d9.0.dylib src/d3d8/libdxvk_d3d8.0.dylib
       INSTALL_COMMAND   ""
