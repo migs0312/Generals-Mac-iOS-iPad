@@ -201,7 +201,7 @@ fi
 
 # SagePatch (optional QoL features). Loaded via LD_PRELOAD so it can interpose
 # SDL3 functions for hot-keys (F11 screenshot, Scroll Lock cursor lock,
-# Ctrl+PageUp/PageDown brightness, Ctrl+1..5 window snap).
+# Ctrl+PageUp/PageDown brightness, Super+1..5 window snap).
 if [[ -f "${SCRIPT_DIR}/libsage_patch.so" && "${SAGE_PATCH_DISABLED:-0}" != "1" ]]; then
     if [[ -n "${LD_PRELOAD:-}" ]]; then
         export LD_PRELOAD="${SCRIPT_DIR}/libsage_patch.so:${LD_PRELOAD}"

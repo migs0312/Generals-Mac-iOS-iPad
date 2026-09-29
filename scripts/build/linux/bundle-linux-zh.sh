@@ -167,7 +167,7 @@ export DXVK_WSI_DRIVER="SDL3"
 export DXVK_LOG_LEVEL="${DXVK_LOG_LEVEL:-info}"
 
 # SagePatch (optional QoL: F11 screenshot, Scroll Lock cursor lock,
-# Ctrl+PgUp/Dn brightness, Ctrl+1..5 window snap). Loaded via LD_PRELOAD only
+# Ctrl+PgUp/Dn brightness, Super+1..5 window snap). Loaded via LD_PRELOAD only
 # if libsage_patch.so is bundled. DXVK_HUD defaults to "fps" when active.
 if [[ -f "${SCRIPT_DIR}/libsage_patch.so" && "${SAGE_PATCH_DISABLED:-0}" != "1" ]]; then
     if [[ -n "${LD_PRELOAD:-}" ]]; then

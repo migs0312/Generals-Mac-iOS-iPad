@@ -373,7 +373,7 @@ LIB_DIR="${RESOURCES_DIR}/lib"
 export DYLD_LIBRARY_PATH="${LIB_DIR}:${BIN_DIR}:${DYLD_LIBRARY_PATH:-}"
 
 # SagePatch (optional QoL: F11 screenshot, Scroll Lock cursor lock, Ctrl+PgUp/Dn
-# brightness, Ctrl+1..5 window snap). Only loaded when the bundled dylib is
+# brightness, Cmd+1..5 window snap). Only loaded when the bundled dylib is
 # present and SAGE_PATCH_DISABLED is not set. Also seeds the engine INI loader
 # via Resources/Data/INI/GameData/SagePatch.ini.
 if [[ -f "${LIB_DIR}/libsage_patch.dylib" && "${SAGE_PATCH_DISABLED:-0}" != "1" ]]; then
