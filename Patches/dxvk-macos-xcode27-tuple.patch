@@ -1,0 +1,44 @@
+Backport of upstream DXVK 1676dcaf342a9b13af86c0464ad46235687727a6
+("[dxvk] Fix build failure with Clang 22", closes doitsujin/dxvk#5545).
+
+    Pass the default-constructed key explicitly instead of using an empty
+    std::tuple() with std::piecewise_construct, which Clang/LLVM 22 rejects
+    due to stricter parameter pack validation.
+
+The same libc++ change ships in Apple clang 21 / Xcode 27, so DXVK fails to
+build on current macOS without this. libc++'s new __try_key_extraction fast
+path for unordered_map::emplace forms `tuple_element<0, _Tuple1>::type` while
+substituting its own enable_if; for _Tuple1 = std::tuple<> that instantiates
+tuple_element<0, tuple<>>, which hard-errors inside the instantiation rather
+than in the immediate context, so the `tuple_size<_Tuple1>::value == 1` guard
+beside it never discards the overload.
+
+This targets the fork commit pinned by DXVK_REMOTE_REF in cmake/dx8.cmake;
+fbraz3/dxvk has not picked up the upstream commit. Delete this patch and its
+PATCH_COMMAND once the pin moves past it. If the fork has changed the
+surrounding code by then, apply-dxvk-patch.cmake stops the build and says so
+rather than guessing.
+
+The hunk carries five lines of context instead of git's default three. Once
+patched, this call site is byte-identical to the emplace in
+createPipelineLibraryLocked() fifteen lines above; with three lines of context
+`git apply --reverse --check` matches there and reports the patch as already
+applied on a tree that is not.
+
+diff --git a/src/dxvk/dxvk_pipemanager.cpp b/src/dxvk/dxvk_pipemanager.cpp
+index 84a07c1f..47df13b2 100644
+--- a/src/dxvk/dxvk_pipemanager.cpp
++++ b/src/dxvk/dxvk_pipemanager.cpp
+@@ -441,11 +441,11 @@ namespace dxvk {
+     DxvkBindingLayout bindings(VK_SHADER_STAGE_FRAGMENT_BIT);
+     auto layout = createPipelineLayout(bindings);
+ 
+     auto iter = m_shaderLibraries.emplace(
+       std::piecewise_construct,
+-      std::tuple(),
++      std::tuple(key),
+       std::tuple(m_device, this, key, layout));
+     return &iter.first->second;
+   }
+ 
+ 
