@@ -10,6 +10,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 BUILD_DIR="${PROJECT_ROOT}/build/macos-vulkan"
 SDL3_LIB_DIR="${BUILD_DIR}/_deps/sdl3-build"
 SDL3_IMAGE_LIB_DIR="${BUILD_DIR}/_deps/sdl3_image-build"
+OPENAL_LIB_DIR="${BUILD_DIR}/_deps/openal_soft-build"
 FONTCONFIG_ETC_DIR="${BUILD_DIR}/vcpkg_installed/arm64-osx/etc/fonts"
 GAMESPY_LIB="${BUILD_DIR}/libgamespy.dylib"
 # GeneralsX @bugfix BenderAI 09/03/2026 Resolve DXVK dylib paths from both install copy and Meson output to avoid stale runtime libs.
@@ -84,6 +85,23 @@ ln -sf libSDL3.0.dylib "${RUNTIME_DIR}/libSDL3.dylib" 2>/dev/null || true
 cp -v "${SDL3_IMAGE_LIB_DIR}"/libSDL3_image.0.4.0.dylib "${RUNTIME_DIR}/"
 ln -sf libSDL3_image.0.4.0.dylib "${RUNTIME_DIR}/libSDL3_image.0.dylib" 2>/dev/null || true
 ln -sf libSDL3_image.0.4.0.dylib "${RUNTIME_DIR}/libSDL3_image.dylib" 2>/dev/null || true
+
+# GeneralsX @bugfix The binary links @rpath/libopenal.1.dylib but the only rpath
+# providing it points into the build tree (_deps/openal_soft-build). Without a
+# local copy the deployed runtime silently depends on the source checkout still
+# existing at its original path; deleting build/ then breaks audio at launch.
+# run.sh puts SCRIPT_DIR on DYLD_LIBRARY_PATH, which dyld consults ahead of
+# @rpath expansion, so a copy here wins.
+echo "  Copying OpenAL library..."
+if compgen -G "${OPENAL_LIB_DIR}/libopenal.1.*.dylib" > /dev/null; then
+    cp -v "${OPENAL_LIB_DIR}"/libopenal.1.*.dylib "${RUNTIME_DIR}/"
+    OPENAL_REAL="$(basename "$(ls "${OPENAL_LIB_DIR}"/libopenal.1.*.dylib | head -1)")"
+    ln -sf "${OPENAL_REAL}" "${RUNTIME_DIR}/libopenal.1.dylib" 2>/dev/null || true
+    ln -sf libopenal.1.dylib "${RUNTIME_DIR}/libopenal.dylib" 2>/dev/null || true
+else
+    echo "WARNING: OpenAL dylib not found at ${OPENAL_LIB_DIR}; runtime will fall back"
+    echo "  to the build-tree rpath and break if build/ is removed."
+fi
 
 echo "  Copying GameSpy library..."
 cp -v "${GAMESPY_LIB}" "${RUNTIME_DIR}/"
